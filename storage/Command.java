@@ -1,8 +1,6 @@
 package storage;
 
-import java.io.*;
-
-import common.*;
+import common.Path;
 import rmi.RMIException;
 
 /** Storage server command interface.
