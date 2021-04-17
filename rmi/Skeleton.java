@@ -244,7 +244,8 @@ public class Skeleton<T> {
 
 			Util.closeServerSocketConnection(Skeleton.this.serverSocket);
 
-			// called when listening thread exits
+			// called when listening thread exits due to a top-level exception, or due to a
+			// call
 			Skeleton.this.stopped(t);
 		}
 	}
@@ -278,6 +279,9 @@ public class Skeleton<T> {
 			ObjectInputStream objectInputStream = null;
 			try {
 				// create output stream and flush it
+//				because the ObjectInputStream constructor might not 
+//				return until it receives a header from the peer’s ObjectOutputStream object,
+//				and that object tends not to send it until it is either used to transmit something, or is flushed
 				try {
 					objectOutputStream = new ObjectOutputStream(this.socket.getOutputStream());
 					objectOutputStream.flush();
@@ -322,7 +326,10 @@ public class Skeleton<T> {
 							objectOutputStream);
 				}
 
-				// get method of same method name from remote interface
+				// get method of same method name from remote interface : - c :- An object
+				// representing the class of
+				// the interface for which the
+				// skeleton server is to handle method call requests.
 				try {
 					remoteMethod = Skeleton.this.c.getMethod(methodName, parameterTypes);
 				} catch (Throwable t6) {
@@ -397,7 +404,7 @@ public class Skeleton<T> {
 		Util.closeServerSocketConnection(this.serverSocket);
 	}
 
-	InetSocketAddress getAddress() throws UnknownHostException {
+	public InetSocketAddress getAddress() throws UnknownHostException {
 		if (CommonUtil.isNull(this.address)) {
 			throw new IllegalStateException("[Skeleton] skeleton has not been assigned address by the user");
 		}
@@ -420,4 +427,5 @@ public class Skeleton<T> {
 		// return port of this skeleton
 		return this.address.getPort();
 	}
+
 }

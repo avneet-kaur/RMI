@@ -169,6 +169,11 @@ public abstract class Stub {
 		// and this invocation handler is equal to the invocation handler of that
 		// argument, and returns false otherwise.
 
+//		 Two stubs are considered equal if they implement the same remote interface
+//		 and connect to the same skeleton. The equals and hashCode methods must respect
+//		 this requirement. The toString method should report the name of the remote interface 
+//		 implemented by the stub, and the remote address (including hostname and port) of the skeleton to 
+//		 which the stub connects. Stubs must also be serializable.
 		private Object invokeLocalMethod(Method method, Object[] args) {
 			if (CommonUtil.isNull(args)) {
 				args = new Object[0];
@@ -193,6 +198,8 @@ public abstract class Stub {
 				// return invocation handler for proxy specified
 				stubHandler = (StubDynamicInvocationHandler) Proxy.getInvocationHandler(proxy);
 
+				// two stubs are equal if they implements same remote interface and connect to
+				// same sekelton
 				if (!this.remoteInterface.equals(stubHandler.remoteInterface)) {
 					return false;
 				}
@@ -201,6 +208,9 @@ public abstract class Stub {
 				return this.remoteAddress.equals(stubHandler.remoteAddress);
 
 			} else {
+				// The toString method should report the name of the remote interface
+//				 implemented by the stub, and the remote address  of the skeleton to 
+//				 which the stub connects. 
 				if (!method.getName().equals("toString")) {
 					throw new NoSuchMethodError("[Stub]: Method= " + method.getName() + " is not implemented in Stub");
 				}
@@ -212,6 +222,9 @@ public abstract class Stub {
 
 		}
 
+		/*
+		 * This method Process method invocation on proxy instance.
+		 */
 		@Override
 		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
 
@@ -255,7 +268,7 @@ public abstract class Stub {
 				try {
 					objectOutputStream.writeObject(method.getName());
 				} catch (Exception ex4) {
-					this.sendResponseToServer(new RMIException(
+					this.readResponseFromServer(new RMIException(
 							"[Stub]: Failed to write name of method to Skeleton Server" + method.getName(), ex4),
 							objectInputStream, objectOutputStream);
 				}
@@ -264,7 +277,7 @@ public abstract class Stub {
 				try {
 					objectOutputStream.writeObject(method.getParameterTypes());
 				} catch (Exception ex5) {
-					this.sendResponseToServer(new RMIException(
+					this.readResponseFromServer(new RMIException(
 							"[Stub]: Failed to write parameter types for method to Skeleton Server." + method.getName(),
 							ex5), objectInputStream, objectOutputStream);
 				}
@@ -273,16 +286,16 @@ public abstract class Stub {
 				try {
 					objectOutputStream.writeObject(args);
 				} catch (Exception ex6) {
-					this.sendResponseToServer(new RMIException(
+					this.readResponseFromServer(new RMIException(
 							"[Stub]: Failed to write arguments for method to Skeleton Server." + method.getName(), ex6),
 							objectInputStream, objectOutputStream);
 				}
 
-				// flush out the output stream of sendingg/ writing message to pipeline
+				// flush out the output stream of sending/ writing message to pipeline
 				try {
 					objectOutputStream.flush();
 				} catch (Exception ex7) {
-					this.sendResponseToServer(
+					this.readResponseFromServer(
 							new RMIException(
 									"[Stub]: Failed to flush the output stream while calling." + method.getName(), ex7),
 							objectInputStream, objectOutputStream);
@@ -316,7 +329,7 @@ public abstract class Stub {
 					} catch (Exception ex11) {
 					}
 				}
-				// flush and close input stream
+				// close input stream
 				if (!CommonUtil.isNull(objectInputStream)) {
 					try {
 						objectInputStream.close();
@@ -345,7 +358,7 @@ public abstract class Stub {
 
 		}
 
-		private void sendResponseToServer(final RMIException RMIexception, final ObjectInputStream objectInputStream,
+		private void readResponseFromServer(final RMIException RMIexception, final ObjectInputStream objectInputStream,
 				final ObjectOutputStream objectOutputStream) throws RMIException {
 
 			try {
